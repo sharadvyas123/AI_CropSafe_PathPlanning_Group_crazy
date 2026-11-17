@@ -1,5 +1,7 @@
 # A* Search Algorithm and Crop-Safe Route Cost Model
 
+> **Scope:** This is the standalone point-to-point A* exercise. The main project demo applies A* to full-field watering coverage and has no user-specified start or goal; see `docs/FIELD_ENVIRONMENT.md` and `src/cropsafe_pathplanning/coverage.py`.
+
 > **Project:** AI-Based Crop-Safe Path Planning  
 > **Module:** A* Search Algorithm & Agricultural Proximity Cost Modeling  
 > **Author:** Ashutosh (Member 4)  

@@ -1,5 +1,7 @@
 # BFS and DFS — Member 2 (Dushyant)
 
+> **Scope:** This document describes the standalone point-to-point search APIs. The project demo uses the full-field coverage planners in `src/cropsafe_pathplanning/coverage.py`; it does not request or display start/goal points.
+
 > [!IMPORTANT]
 > Both algorithms use the **shared interfaces** from `cropsafe_pathplanning.types`
 > (`FieldMap`, `SearchResult`, `CARDINAL_DIRECTIONS`) and are compatible with the

@@ -1,9 +1,9 @@
 
-"""CropSafe Path Planning: AI search algorithms for agricultural field robotics.
+"""CropSafe field watering: full-area coverage planning for agricultural robotics.
 
-This package provides grid representations, heuristics, and search algorithms
-(BFS, DFS, GBFS, A*) designed to navigate farm fields while avoiding obstacles
-and respecting crop-protection zones.
+The main demo applies BFS, DFS, Greedy Best-First, and A* to cover all irrigable
+field cells without entering protected or obstacle cells. Standalone point-to-
+point search APIs are also retained for the assignment's algorithm exercises.
 """
 
 from cropsafe_pathplanning.gbfs import (

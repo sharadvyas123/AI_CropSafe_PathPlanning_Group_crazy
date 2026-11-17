@@ -13,14 +13,12 @@ Position = tuple[int, int]
 class Field:
     """A rectangular four-connected field.
 
-    Crop-row, protected, and obstacle cells are forbidden. Traversable cells
-    adjacent to a protected cell receive a configurable nonnegative surcharge.
+    Only protected and obstacle cells are forbidden to watering. Crop-row
+    cells remain irrigable. This field model has no start or goal coordinates.
     """
 
     height: int
     width: int
-    start: Position
-    goal: Position
     crop_rows: set[Position] = field(default_factory=set)
     protected: set[Position] = field(default_factory=set)
     obstacles: set[Position] = field(default_factory=set)
@@ -31,15 +29,23 @@ class Field:
             raise ValueError("Field dimensions must be positive")
         if not math.isfinite(self.risk_penalty) or self.risk_penalty < 0:
             raise ValueError("risk_penalty must be finite and nonnegative")
-        for position in {self.start, self.goal} | self.crop_rows | self.protected | self.obstacles:
+        for position in self.crop_rows | self.protected | self.obstacles:
             if not self.in_bounds(position):
                 raise ValueError(f"Position outside field: {position}")
-        if self.start in self.blocked or self.goal in self.blocked:
-            raise ValueError("Start and goal must be traversable")
 
     @property
     def blocked(self) -> set[Position]:
-        return self.crop_rows | self.protected | self.obstacles
+        return self.protected | self.obstacles
+
+    @property
+    def irrigable(self) -> set[Position]:
+        """All field cells that should receive water."""
+        return {
+            (row, col)
+            for row in range(self.height)
+            for col in range(self.width)
+            if (row, col) not in self.blocked
+        }
 
     def in_bounds(self, position: Position) -> bool:
         row, col = position
@@ -65,8 +71,6 @@ class Field:
         return Field(
             height=self.height,
             width=self.width,
-            start=self.start,
-            goal=self.goal,
             crop_rows=set(self.crop_rows),
             protected=set(self.protected),
             obstacles=set(obstacles),
@@ -74,19 +78,11 @@ class Field:
         )
 
 
-def demo_field(*, known_map: bool = False) -> Field:
+def demo_field() -> Field:
     """Return the fixed 12x18 scenario used by the command-line demo.
 
-    ``known_map=False`` gives the robot only confirmed obstacles; the true
-    obstacle returned by :func:`demo_unknown_obstacle` is withheld from it.
+    Returns the complete field geometry used by the watering demo.
     """
-    del known_map
     from .field_scenario import make_field
 
     return make_field()
-
-
-def demo_unknown_obstacle() -> Position:
-    from .field_scenario import FIELD_CONFIG
-
-    return FIELD_CONFIG["hidden_obstacle"]

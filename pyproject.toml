@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cropsafe-pathplanning"
 version = "0.1.0"
-description = "AI-Based Crop-Safe Path Planning Simulation"
+description = "AI-based full-field crop-safe watering coverage simulation"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

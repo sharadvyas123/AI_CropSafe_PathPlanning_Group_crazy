@@ -1,137 +1,78 @@
-# AI-Based Crop-Safe Path Planning
+# AI-Based Crop-Safe Field Watering
 
-> A grid-based simulation of an autonomous robot navigating a potato field while protecting crops, avoiding obstacles, and replanning when it discovers an unknown obstacle.
+A grid simulation for planning a robot tour that waters the complete irrigable field. The demo does not ask for a start point or a destination. It automatically plans coverage over all cells except protected areas and obstacles.
 
-> **Project status:** complete implementation. The command below runs all four search algorithms, simulates online replanning, and refreshes the reports and plots.
+## Watering rules
 
-## Assignment goals
+- Every cell in the rectangular field is eligible for watering unless it is marked protected or as an obstacle.
+- Crop-row cells are irrigable and must be covered.
+- Protected cells and obstacle cells are never watered or entered.
+- A plan is complete when its route has visited every eligible cell.
+- A continuous tour requires the eligible cells to form one connected region. The planner reports an error if obstacles split the field into disconnected regions.
 
-The project follows the supplied Theory Coding Assignment. It will model a 2D field, formulate a search problem, implement BFS, DFS, Greedy Best-First Search, and A*, protect crop regions, simulate discovery of an unknown obstacle, and compare the algorithms.
+The sample is a 12 × 18 grid with 28 protected cells and 16 obstacles. The obstacle coordinates are listed in `FIELD_CONFIG["obstacles"]` in `src/cropsafe_pathplanning/field_scenario.py`. To change the obstacle layout, edit that set and rerun the demo. `Field.blocked` combines protected cells and obstacles, and `Field.irrigable` subtracts those blocked cells from the whole grid; the coverage planners then route only through irrigable cells.
+
+The first eligible cell in row-major order is selected internally as the tour's launch cell. No user-supplied start or goal is required, printed, or shown in the coverage map.
 
 ## Repository layout
 
 ```text
-.
-├── README.md
-├── requirements.txt
-├── src/cropsafe_pathplanning/
-│   ├── field_scenario.py
-│   ├── model.py
-│   ├── types.py
-│   ├── bfs_dfs.py
-│   ├── gbfs.py
-│   ├── astar.py
-│   ├── evaluation.py
-│   ├── replanning.py
-│   ├── visualize.py
-│   └── __main__.py
-├── docs/
-├── tests/
-├── results/
-│   ├── algorithm_comparison.csv
-│   ├── replanning_summary.csv
-│   └── screenshots/
-└── task/
-    ├── TEAM_TASKS.md
-    ├── Hitesh.md
-    ├── Dushyant.md
-    ├── Ricky.md
-    ├── Ashutosh.md
-    └── Sharad.md
+src/cropsafe_pathplanning/
+├── coverage.py          # BFS, DFS, Greedy, and A* coverage tours
+├── field_scenario.py    # Shared field layout
+├── model.py             # Field and irrigable-cell rules
+├── visualize.py         # SVG coverage map
+└── __main__.py          # CLI and CSV output
+docs/                    # Algorithm and field notes
+results/
+├── watering_coverage.csv
+└── screenshots/watering_coverage.svg
+tests/                   # Project checks
 ```
 
-All algorithms share `(row, column)` coordinates and the single scenario from `field_scenario.py`. `evaluation.py` adapts search results for comparison, while `replanning.py` calls the submitted A* module for online obstacle recovery.
+## Setup
 
-## Model and design
-
-- Represent each traversable location as a grid coordinate `(row, column)`.
-- Use four-directional movement (up, down, left, right) initially. Manhattan distance is suitable as a lower bound when each move costs at least one.
-- Keep the true field map separate from the robot's known map. At least one obstacle begins hidden from the robot; when detected, update its known map and replan with A*.
-- Treat crop rows, protected cells, and known obstacles as blocked. Add a configurable proximity penalty to legal cells adjacent to protected crops; A* validates cost values against the Manhattan heuristic assumptions.
-- Return comparable run data from each search: path, path cost/length, expanded-node count, elapsed time, and reached-goal status. Record replanning count for the dynamic-obstacle run.
-- Fix and document scenario inputs when comparing algorithms. Report measured results rather than predicted performance.
-
-## Requirements
-
-Python 3.10 or newer is recommended. The implementation and tests use only the Python standard library, including for SVG visualization.
-
-## Setup and run
-
-From the repository root, create and activate a virtual environment:
+Python 3.10 or newer is recommended. The project uses only the Python standard library.
 
 ```bash
 python -m venv .venv
 ```
 
-On macOS/Linux:
+Activate the environment on macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-On Windows PowerShell:
+Activate on Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+Install the project if desired:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
-Run from the repository root:
+## Run the presentation demo
+
+From the repository root:
 
 ```bash
 PYTHONPATH=src python -m cropsafe_pathplanning
 ```
 
-On Windows PowerShell:
+The command runs BFS, DFS, Greedy Best-First, and A* as coverage planners. It prints a comparison and a text map (`W` watered, `P` protected, `X` obstacle), then writes:
 
-```powershell
-$env:PYTHONPATH = "src"
-python -m cropsafe_pathplanning
-```
+- `results/watering_coverage.csv` — coverage, tour length, expanded cells, and runtime for each algorithm.
+- `results/screenshots/watering_coverage.svg` — one field coverage map, with no start/goal markers.
 
-The run prints a comparison table and writes `results/algorithm_comparison.csv`, `results/replanning_summary.csv`, and SVG figures under `results/screenshots/`.
+## What the algorithms do
 
-Run the full test suite with:
+Each algorithm explores the graph of irrigable cells using its frontier rule, and the robot follows legal connecting routes through that order. BFS explores breadth-first, DFS explores depth-first, Greedy prioritizes progress toward the far side of the field, and A* combines accumulated traversal distance with that sweep heuristic. All four must cover the same eligible cell set; their movement counts and runtimes can differ.
 
-```bash
-PYTHONPATH=src python -m unittest discover -s tests -v
-```
+## Assignment background
 
-## Algorithms and evaluation
-
-- **BFS:** baseline for equal-cost, four-directional movement; finds a minimum-step path when all step costs are equal.
-- **DFS:** explores deeply and is included for comparison; it does not generally guarantee a shortest path.
-- **Greedy Best-First Search:** prioritizes estimated distance to the goal; it can be fast but is not generally cost-optimal.
-- **A\*:** prioritizes `g(n) + h(n)`, where `g` is cost so far and `h` estimates remaining cost. For four-directional movement, use Manhattan distance as the base heuristic. If risk penalties are nonnegative, this base movement-distance heuristic remains a lower bound; document the cost model and optimality assumptions.
-
-The demo includes a 12×18 field with blocked crop bands, protected cells, and fixed known obstacles. All four algorithms run against the same known map. The online experiment uses the submitted A* module to detect obstacle `(10, 9)`, update the known map, and replan from the robot's current position. Execution times are machine-dependent one-run measurements. SVG figures belong in `results/screenshots/`.
-
-### Sample run
-
-The checked-in CSV files and figures are generated by the command above. In the current sample run, all four algorithms reached the goal; A* found the lowest-cost route under the crop-risk cost model. BFS found the shortest route by step count, which is expected because BFS optimizes steps rather than weighted risk cost. The online experiment detected the hidden obstacle and replanned once, then reached the goal. Timings are recorded in `results/algorithm_comparison.csv` and vary by machine and run.
-
-| Algorithm | Path steps | Path cost | Expanded nodes | Reached goal |
-|---|---:|---:|---:|---|
-| BFS | 17 | 41.00 | 140 | Yes |
-| DFS | 43 | 65.00 | 156 | Yes |
-| Greedy | 19 | 31.00 | 22 | Yes |
-| A* | 27 | 27.00 | 111 | Yes |
-
-Online obstacle: detected `(10, 9)`, 1 replan, 29 steps total, goal reached.
-
-## Team assignments and contribution scores
-
-See [task/TEAM_TASKS.md](task/TEAM_TASKS.md) for the consolidated assignments, acceptance criteria, and contribution-score tracking. Replace member placeholders with full names and roll numbers before submission.
-
-## References
-
-- Peter Hart, Nils Nilsson, and Bertram Raphael, [A Formal Basis for the Heuristic Determination of Minimum Cost Paths (1968)](https://ai.stanford.edu/~nilsson/OnlinePubs-Nils/PublishedPapers/astar.pdf).
-- Amit Patel, [Introduction to the A* Algorithm](https://www.redblobgames.com/pathfinding/a-star/introduction.html) and [A* implementation guide](https://www.redblobgames.com/pathfinding/a-star/implementation.html), for grid-search concepts and Manhattan distance.
-- Python Packaging User Guide, [Installing packages using pip and virtual environments](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/).
-
-Credit any additional external references or code used in the final submission.
+The original point-to-point search implementations remain available in their modules for the algorithm exercises, but the main project demo and its reported results now use the full-field watering objective described above.

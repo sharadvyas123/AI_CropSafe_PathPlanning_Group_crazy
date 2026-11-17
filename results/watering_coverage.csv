@@ -1,0 +1,5 @@
+Algorithm,Irrigable cells,Watered cells,Coverage (%),Movement steps,Expanded cells,Time (ms),Complete
+BFS,172,172,100.00,1066,172,26.815,True
+DFS,172,172,100.00,243,172,5.117,True
+Greedy,172,172,100.00,901,172,22.270,True
+A*,172,172,100.00,822,172,20.680,True

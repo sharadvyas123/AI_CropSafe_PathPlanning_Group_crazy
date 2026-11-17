@@ -1,5 +1,7 @@
 # Greedy Best-First Search (GBFS) and Manhattan Distance Heuristic
 
+> **Scope:** This document describes the standalone point-to-point GBFS API. The main project demo uses a separate GBFS coverage strategy that visits the whole irrigable field without user-specified endpoints; see `src/cropsafe_pathplanning/coverage.py`.
+
 > **Project:** AI-Based Crop-Safe Path Planning  
 > **Module:** Greedy Best-First Search & Informed Heuristic Design  
 > **Author:** Ricky (Member 3)  
